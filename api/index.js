@@ -1,28 +1,32 @@
-const express = require('express');
-const app = express();
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
+const express = require('express')
+const mongoose = require('mongoose')
+const cors = require('cors')
+const userRoutes = require('../routes/userRoutes')
+const postRoutes = require('../routes/postRoutes')
+const searchRoutes = require('../routes/searchRoutes')
+const dotenv = require('dotenv')
 
-const userRoutes = require('../routes/userRoutes');
-const postRoutes = require('../routes/postRoutes');
+dotenv.config()
 
-dotenv.config();
+const app = express()
 
-app.use(cors());
-app.use(express.json());
+// Middleware
+app.use(cors())
+app.use(express.json())
 
-app.use('/api/users', userRoutes);
-app.use('/api/posts', postRoutes);
-
+// MongoDB'ga ulanish
 if (!mongoose.connection.readyState) {
-    mongoose.connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    }).then(() => console.log('MongoDB Connected'))
-      .catch(err => console.error('MongoDB connection error:', err));
+	mongoose
+		.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bgram')
+		.then(() => console.log('✅ MongoDB ga muvaffaqiyatli ulandi!'))
+		.catch(err => console.error('MongoDB ulanish xatosi:', err))
 }
 
-module.exports = (req, res) => {
-    app(req, res);
-};
+// Routes
+app.use('/api/users', userRoutes)
+app.use('/api/posts', postRoutes)
+app.use('/api/search', searchRoutes)
+
+// Vercel API Handler export
+module.exports = app
+module.exports.handler = (req, res) => app(req, res)
